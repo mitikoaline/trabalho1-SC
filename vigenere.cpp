@@ -7,7 +7,6 @@ using namespace std;
 
 // retorna a posicao da letra no alfabeto
 int BuscaIndice(char letra, vector<char> alfabeto) {
-
     auto it = find(alfabeto.begin(), alfabeto.end(), letra);
 
     if (it != alfabeto.end()) {
@@ -18,92 +17,64 @@ int BuscaIndice(char letra, vector<char> alfabeto) {
 
 }
 
-string Cifra(string senha, string mensagem) {
-    string mensagem_cifrada = "";
-    int pos_mensagem, pos_senha, pos_cifra;
-    char char_mensagem, char_senha;
+vector<char> GeraAlfabeto() {
     vector<char> alfabeto;
 
-    // cria vetor do alfabeto
     for(char letra = 'a'; letra <= 'z'; letra++) {
         alfabeto.push_back(letra);
     }
+    return alfabeto;
 
-    int j = 0;
-    for(char letra : mensagem) {
-        char_mensagem = tolower(letra);
-
-        pos_mensagem = BuscaIndice(char_mensagem, alfabeto); // busca a posicao no alfabeto da letra da mensagem a ser cifrada
-
-        if (pos_mensagem != -1) { // caso em que a letra consta no alfabeto
-
-            char_senha = senha[j % senha.length()]; // realiza a busca da letra da senha que servira para a etapa de cifracao
-            pos_senha = BuscaIndice(char_senha, alfabeto); // busca a posicao da letra da senha no alfabeto
-
-            pos_cifra = ((pos_mensagem + pos_senha) % 26); // Ci = Pi + Ki (mod 26)
-            mensagem_cifrada += alfabeto[pos_cifra];
-            
-            j++;
-
-        } else { // caso em que a letra nao consta no alfabeto replica o caractere original na mensagem cifrada
-            mensagem_cifrada += char_mensagem;
-        }
-    }
-
-    return mensagem_cifrada;
 }
 
-string Decifra(string senha, string mensagem) {
-    string mensagem_decifrada = "";
-    int pos_mensagem, pos_senha;
-    char char_mensagem, char_senha;
-    vector<char> alfabeto;
-
-    // cria vetor do alfabeto
-    for(char letra = 'a'; letra <= 'z'; letra++) {
-        alfabeto.push_back(letra);
-    }
-
+// Realiza a cifragem ou decifragem da mensagem
+string Cripto(string senha, string mensagem, bool cifrar) {
+    string resultado = "";
+    vector<char> alfabeto = GeraAlfabeto();
     int j = 0;
-    for(char letra : mensagem) {
-        char_mensagem = tolower(letra);
 
-        pos_mensagem = BuscaIndice(char_mensagem, alfabeto); // busca a posicao da letra da mensagem a ser decifrada no alfabeto
+    for (char letra : mensagem) {
+        char char_mensagem = tolower(letra);
+        int pos_mensagem = BuscaIndice(char_mensagem, alfabeto); // busca a posicao da letra no alfabeto
 
         if (pos_mensagem != -1) { // caso em que a letra consta no alfabeto
-
-            char_senha = senha[j % senha.length()]; // realiza a busca da letra da senha que servira para a etapa de decifracao
-            pos_senha = BuscaIndice(char_senha, alfabeto); // busca a posicao da letra da senha no alfabeto
-
-            char char_decifrado = ((pos_mensagem - pos_senha + 26) % 26); // Pi = Ci - Ki + 26 (mod 26)
-            mensagem_decifrada += alfabeto[char_decifrado];
-            
+            char char_senha = senha[j % senha.length()]; // realiza a busca da letra da senha que servira para a etapa de cifracao/decifracao
+            int pos_senha = BuscaIndice(char_senha, alfabeto);
+            // Cifracao:   Ci = Pi + Ki (mod 26)
+            // Decifracao: Pi = Ci - Ki + 26 (mod 26)
+            int pos_resultado = (cifrar) ? ((pos_mensagem + pos_senha) % 26) : ((pos_mensagem - pos_senha + 26) % 26);
+            resultado += alfabeto[pos_resultado];
             j++;
-
-        } else { // caso em que a letra nao consta no alfabeto replica o caractere original na mensagem decifrada
-            mensagem_decifrada += char_mensagem;
+        } else { // caso em que a letra nao consta no alfabeto replica o caractere original
+            resultado += char_mensagem;
         }
     }
 
-    return mensagem_decifrada;
+    return resultado;
 }
 
 int main() {
-    // Abra o arquivo
-    std::ifstream arquivo("desafio1.txt");
-    
+    // Abre o arquivo
+    ifstream arquivo("desafio1.txt");
+
     if (!arquivo.is_open()) {
         cout << "Erro ao abrir o arquivo." << endl;
-        return 0;
+        return 1;
     }
 
-    // Crie uma string para armazenar o conteúdo do arquivo
     string mensagem((istreambuf_iterator<char>(arquivo)), (istreambuf_iterator<char>()));
+    arquivo.close();
 
     string senha = "arara";
 
-    cout << Decifra(senha, mensagem) << endl;
+    string mensagemCifrada = Cripto("teste", "Gondim Gondim", true);
+    string mensagemDecifrada = Cripto(senha, mensagem, false);
 
-    arquivo.close();
+    cout << "Mensagem Cifrada:" << endl;
+    cout << mensagemCifrada << endl;
+    cout << "---------------------------------------------" << endl;
+    cout << "Mensagem Decifrada:" << endl;
+    cout << mensagemDecifrada << endl;
+
     return 0;
 }
