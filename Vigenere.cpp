@@ -1,5 +1,11 @@
 #include "Vigenere.hpp"
 
+#ifdef _WIN32 //macro para limpar o terminal
+    #define CLEAR "cls"
+#else
+    #define CLEAR "clear"
+#endif
+
 // retorna a posicao da letra no alfabeto
 int Vigenere::BuscaIndice(char letra, vector<char> alfabeto) {
     auto it = find(alfabeto.begin(), alfabeto.end(), letra);
@@ -76,8 +82,15 @@ void Vigenere::setMensagem(string nome_do_arquivo){
 
 //escolhe qual dos arquivos digitados na linha de comando vai ser utilizado
 int Menu::escolhaDeArquivos(int numero_de_arquivos, char* nomes_dos_arquivos[]){
+
     int escolha;
-    cout << "Escolha um dos " << numero_de_arquivos-1 << "arquivos fornecidos:" << endl;
+	int coletor; //variavel para o guardar o retorno de system e parar os warnings
+    
+	coletor = system(CLEAR);
+	if(coletor == -1){
+		cout << "Falha na limpeza da tela" <<endl;
+	}
+	cout << "Escolha um dos " << numero_de_arquivos-1 << "arquivos fornecidos:" << endl;
     for(int i=1; i<numero_de_arquivos; i++){
         cout << i << " - " << nomes_dos_arquivos[i] << endl;
     }
@@ -95,7 +108,12 @@ void Menu::Operacoes(Vigenere cifragem ){
 
 	char opcao;
     string senha;
+	int coletor; //variavel para o guardar o retorno de system e parar os warnings
 
+    coletor = system(CLEAR);
+	if(coletor == -1){
+		cout << "Falha na limpeza da tela" <<endl;
+	}
     cout << "Escolha uma das opcoes abaixo"<<endl;
     cout << "1 - cifrar" <<endl;
     cout << "2 - decifrar" <<endl;
@@ -107,30 +125,56 @@ void Menu::Operacoes(Vigenere cifragem ){
     switch (opcao)
     {
     case '1':
-        cout <<endl;
+        coletor = system(CLEAR);
+		if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
 		cifragem.setCifrar(true);
         cout << "digite a senha: ";
         cin >> senha;
         cifragem.setSenha(senha);
-		cout <<endl;
+		coletor = system(CLEAR);
+		if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
 		cout << cifragem.Cripto();//exibe a mensagem cifrada
-        cout <<endl;
 		cout <<endl;
-        break;
+		cout <<endl;
+        cout << "Pressione ENTER para continuar."<<endl;
+		getchar();
+        getchar();
+		coletor = system(CLEAR);
+        if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
+		break;
     case '2':
-		cout <<endl;
-        cifragem.setCifrar(false);
+		coletor = system(CLEAR);
+        if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
+		cifragem.setCifrar(false);
         cout << "digite a senha: ";
         cin >> senha;
         cifragem.setSenha(senha);
-		cout <<endl;
+		coletor = system(CLEAR);
+		if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
 		cout << cifragem.Cripto();//exibe a mensagem decifrada
-        cout <<endl;
 		cout <<endl;
-        break;
+		cout <<endl;
+        cout << "Pressione ENTER para continuar."<<endl;
+        getchar();
+		getchar();
+		coletor = system(CLEAR);
+        if(coletor == -1){
+			cout << "Falha na limpeza da tela" <<endl;
+		}
+		break;
     
     default:
-        cout <<endl;
+        coletor = system(CLEAR);
         cout << "Escolha uma das opcoes POSSIVEL"<<endl;
         cout << "1 - cifrar" <<endl;
         cout << "2 - decifrar" <<endl;
