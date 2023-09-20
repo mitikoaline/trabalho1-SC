@@ -6,6 +6,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <map>
+#include <regex>
+#include <cmath>
 
 using namespace std;
 
@@ -21,6 +24,12 @@ class Vigenere{
 		void setSenha(string);
 		void setMensagem(string nome_do_arquivo);
 		void setCifrar(bool);
+		// metodos para a parte do ataque
+		int EncontraTamanhoSenha();
+		vector<pair<string, vector<int>>> PosicoesTrigramas();
+		vector<int> CalculaEspacos(const vector<int>& posicoes);
+		vector<int> ObtemFatores(int num);
+		int TamanhoSenha(const vector<vector<int>>& fatores);
 };
 
 class Menu{

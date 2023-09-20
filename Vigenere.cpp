@@ -109,6 +109,7 @@ void Menu::Operacoes(Vigenere cifragem ){
 	char opcao;
     string senha;
 	int coletor; //variavel para o guardar o retorno de system e parar os warnings
+    int tamanho_senha;
 
     coletor = system(CLEAR);
 	if(coletor == -1){
@@ -172,7 +173,10 @@ void Menu::Operacoes(Vigenere cifragem ){
 			cout << "Falha na limpeza da tela" <<endl;
 		}
 		break;
-    
+    case '3':
+        tamanho_senha = cifragem.EncontraTamanhoSenha();
+        cout << "O candidato ao tamanho da senha eh: " << tamanho_senha << endl;
+        break;
     default:
         coletor = system(CLEAR);
         cout << "Escolha uma das opcoes POSSIVEL"<<endl;
@@ -193,4 +197,155 @@ void Menu::setEncerrar(string encerrar){
 //faz o loop do menu parar ou continuar
 bool Menu::getEncerrar(){
     return this->encerrar;
+}
+
+/*********************************************************************************************************/
+
+// Ataque utilizando metodo kasiski
+
+vector<pair<string, vector<int>>> Vigenere::PosicoesTrigramas() {
+    map<string, vector<int>> pos_trigrama;
+    vector<string> tri_repetidos;
+    vector<pair<string, vector<int>>> pos_tri_repetidos;
+    
+    regex pattern("[^a-z]");
+    string mensagem_filtrada = regex_replace(this->mensagem, pattern, ""); // faz a exclusao de caracteres especiais da mensagem
+
+    // salva os trigramas com suas respectivas posicoes
+    for(int i = 0; i < mensagem_filtrada.length(); ++i) {
+        string prox_trigrama = mensagem_filtrada.substr(i, 3);
+        if (pos_trigrama.find(prox_trigrama) != pos_trigrama.end()) {
+            pos_trigrama[prox_trigrama].push_back(i);
+        } else {
+            pos_trigrama[prox_trigrama] = {i};
+        }
+    }
+
+    // verifica os trigramas que possuem 2 ou mais ocorrencias
+    for(const auto& x : pos_trigrama) {
+        if (x.second.size() >= 2) {
+            tri_repetidos.push_back(x.first);
+        }
+    }
+
+    // cria vetor contendo os trigramas com 2 ou mais ocorrencias junto com suas respectivas posicoes
+    for(const string& x : tri_repetidos) {
+        pos_tri_repetidos.push_back(make_pair(x, pos_trigrama[x]));
+    }
+
+    return pos_tri_repetidos;
+}
+
+vector<int> Vigenere::CalculaEspacos(const vector<int>& posicoes) {
+    vector<int> espacos;
+
+    for(int i = 0; i < posicoes.size() - 1; ++i) {
+        espacos.push_back(posicoes[i + 1] - posicoes[i]);
+    }
+
+    return espacos;
+}
+
+vector<int> Vigenere::ObtemFatores(int num) {
+    vector<int> fatores;
+
+    for(int i = 1; i <= sqrt(num); ++i) {
+        if (num % i == 0) {
+            fatores.push_back(i);
+            if (i != num / i) {
+                fatores.push_back(num / i);
+            }
+        }
+    }
+
+    sort(fatores.begin(), fatores.end());
+
+    return fatores;
+
+}
+
+int Vigenere::TamanhoSenha(const vector<vector<int>>& fatores) {
+    vector<int> tamanhos_senha;
+    map<int, int> lista;
+    int maior_ocorr = 0;
+    int tamanho_candidato;
+    
+    // armazena todos fatores candidatos para tamanhos da senha
+    for(const vector<int>& fat : fatores) {
+        for(int f : fat) {
+            if(f > 1 && f < 26) {
+                tamanhos_senha.push_back(f);
+            }
+
+        }
+    }
+
+    // armazena os possiveis tamanhos junto com suas ocorrencias
+    for(int num : tamanhos_senha) {
+        lista[num]++;
+    }
+
+    // busca pelo tamanho que possui maior ocorrencia
+    for(const auto& x : lista) {
+        if (x.second > maior_ocorr) {
+            tamanho_candidato = x.first;
+            maior_ocorr = x.second;
+        }
+    }
+
+    return tamanho_candidato;
+
+}
+
+
+int Vigenere::EncontraTamanhoSenha() {
+    // encontra trigramas repetidos com suas respectivas posicoes
+    vector<pair<string, vector<int>>> pos_tri_repetidos;
+    map<string, vector<int>> espacos_tri;
+    vector<vector<int>> fatores;
+
+    pos_tri_repetidos = PosicoesTrigramas();
+    // for (const auto& x : pos_tri_repetidos) {
+    //     cout << "Trigrama: " << x.first << ", Posicoes: ";
+    //     for (int pos : x.second) {
+    //         cout << pos << " ";
+    //     }
+    //     cout << endl;
+    // }
+
+    // calcula o espacamento dos trigramas
+    for (const auto& x : pos_tri_repetidos) {
+        const string& tri = x.first;
+        const vector<int>& posicoes = x.second;
+        vector<int> espacos = CalculaEspacos(posicoes);
+        espacos_tri[tri] = espacos;
+    }
+
+    // for (const auto& x : espacos_tri) {
+    //     cout << "Trigrama: " << x.first << ", Espacos: ";
+    //     for (int esp : x.second) {
+    //         cout << esp << " ";
+    //     }
+    //     cout << endl;
+    // }
+
+    // calculo dos fatores dos espacamentos
+    for (const auto& x : espacos_tri) {
+        const vector<int>& espacos = x.second;
+
+        for (int esp : espacos) {
+            fatores.push_back(ObtemFatores(esp));
+        }
+    }
+
+    // for (const auto& fat : fatores) {
+    //     cout << "Fatores: ";
+    //     for (int factor : fat) {
+    //         cout << factor << " ";
+    //     }
+    //     cout << endl;
+    // }
+
+    return TamanhoSenha(fatores);
+
 }
