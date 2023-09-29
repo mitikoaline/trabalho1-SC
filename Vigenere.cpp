@@ -35,8 +35,7 @@ string Vigenere::Cripto() {
 	int j = 0;
 
 	for (char letra : this->mensagem) {
-		char char_mensagem = tolower(letra);
-		int pos_mensagem = BuscaIndice(char_mensagem, alfabeto); // busca a posicao da letra no alfabeto
+		int pos_mensagem = BuscaIndice(letra, alfabeto); // busca a posicao da letra no alfabeto
 
 		if (pos_mensagem != -1) { // caso em que a letra consta no alfabeto
 			char char_senha = this->senha[j % (this->senha).length()]; // realiza a busca da letra da senha que servira para a etapa de cifracao/decifracao
@@ -47,7 +46,7 @@ string Vigenere::Cripto() {
 			resultado += alfabeto[pos_resultado];
 			j++;
 		} else { // caso em que a letra nao consta no alfabeto replica o caractere original
-			resultado += char_mensagem;
+			resultado += letra;
 		}
 	}
 
@@ -72,6 +71,11 @@ void Vigenere::setMensagem(string nome_do_arquivo){
 	}
 
 	string mensagem((istreambuf_iterator<char>(arquivo)), (istreambuf_iterator<char>()));
+
+    for (char &car : mensagem) {
+        car = tolower(car);
+    }
+
 	this->mensagem = mensagem;
 	arquivo.close();
 }
@@ -179,20 +183,48 @@ void Menu::Operacoes(Vigenere cifragem ){
 		}
 		break;
 	case '3':
-		coletor = system(CLEAR);
+    {
+        coletor = system(CLEAR);
 		if(coletor == -1){
 			cout << "Falha na limpeza da tela" <<endl;
 		}
-		tamanho_senha = cifragem.EncontraTamanhoSenha();
-		cout << "O candidato ao tamanho da senha eh: " << tamanho_senha << endl;
+
+        map<int, int> lista_candidatos = cifragem.EncontraTamanhosSenha();
 		cout << "Digite [1] se o plaintext for em inglês, e [2] se ele for em português: ";
-		cin >> idioma;
-		cifragem.EncontraSenha(idioma);
-		cout << "Senha: " << cifragem.getSenha() << endl;
-		cout << "Plaintext: " << endl;
-		cifragem.setCifrar(false);
-		cout << cifragem.Cripto() <<endl;
+        cin >> idioma;
+        while(true) {
+            int maior_ocorr = 0;
+            // busca pelo tamanho que possui maior ocorrencia
+            for(const auto& x : lista_candidatos) {
+                if (x.second > maior_ocorr) {
+                    tamanho_senha = x.first;
+                    maior_ocorr = x.second;
+                }
+            }
+            cout << "O candidato ao tamanho da senha eh: " << tamanho_senha << endl;
+            cifragem.EncontraSenha(idioma, tamanho_senha);
+            cout << "Senha: " << cifragem.getSenha() << endl;
+            cout << "Plaintext: " << endl;
+            cifragem.setCifrar(false);
+            cout << cifragem.Cripto() <<endl;
+            string ataque_concluido;
+            cout << "A senha quebrou a cifra? [s/n]: ";
+            cin >> ataque_concluido;
+			cout << endl;
+
+            if (ataque_concluido != "s") {
+                auto it = lista_candidatos.find(tamanho_senha);
+				if (it != lista_candidatos.end()) {
+        			lista_candidatos.erase(it); // remove a senha que nao conseguiu realizar o ataque
+				}
+            } else {
+				break;
+			}
+            
+        }
+
 		break;
+    }
 	default:
 		coletor = system(CLEAR);
 		cout << "Escolha uma das opcoes POSSIVEL"<<endl;
@@ -280,54 +312,14 @@ vector<int> Vigenere::ObtemFatores(int num) {
 
 }
 
-int Vigenere::TamanhoSenha(const vector<vector<int>>& fatores) {
-	vector<int> tamanhos_senha;
-	map<int, int> lista;
-	int maior_ocorr = 0;
-	int tamanho_candidato = 1; //corrigindo warning de nao inicializado
-	
-	// armazena todos fatores candidatos para tamanhos da senha
-	for(const vector<int>& fat : fatores) {
-		for(int f : fat) {
-			if(f > 1 && f < 26) {
-				tamanhos_senha.push_back(f);
-			}
-
-		}
-	}
-
-	// armazena os possiveis tamanhos junto com suas ocorrencias
-	for(int num : tamanhos_senha) {
-		lista[num]++;
-	}
-
-	// busca pelo tamanho que possui maior ocorrencia
-	for(const auto& x : lista) {
-		if (x.second > maior_ocorr) {
-			tamanho_candidato = x.first;
-			maior_ocorr = x.second;
-		}
-	}
-
-	return tamanho_candidato;
-
-}
-
-
-int Vigenere::EncontraTamanhoSenha() {
-	// encontra trigramas repetidos com suas respectivas posicoes
-	vector<pair<string, vector<int>>> pos_tri_repetidos;
+map<int, int> Vigenere::EncontraTamanhosSenha() {
+	vector<pair<string, vector<int>>> pos_tri_repetidos; // encontra trigramas repetidos com suas respectivas posicoes
 	map<string, vector<int>> espacos_tri;
 	vector<vector<int>> fatores;
+    vector<int> tamanhos_senha;
+    map<int, int> lista_candidatos;
 
 	pos_tri_repetidos = PosicoesTrigramas();
-	// for (const auto& x : pos_tri_repetidos) {
-	//     cout << "Trigrama: " << x.first << ", Posicoes: ";
-	//     for (int pos : x.second) {
-	//         cout << pos << " ";
-	//     }
-	//     cout << endl;
-	// }
 
 	// calcula o espacamento dos trigramas
 	for (const auto& x : pos_tri_repetidos) {
@@ -336,14 +328,6 @@ int Vigenere::EncontraTamanhoSenha() {
 		vector<int> espacos = CalculaEspacos(posicoes);
 		espacos_tri[tri] = espacos;
 	}
-
-	// for (const auto& x : espacos_tri) {
-	//     cout << "Trigrama: " << x.first << ", Espacos: ";
-	//     for (int esp : x.second) {
-	//         cout << esp << " ";
-	//     }
-	//     cout << endl;
-	// }
 
 	// calculo dos fatores dos espacamentos
 	for (const auto& x : espacos_tri) {
@@ -354,15 +338,21 @@ int Vigenere::EncontraTamanhoSenha() {
 		}
 	}
 
-	// for (const auto& fat : fatores) {
-	//     cout << "Fatores: ";
-	//     for (int factor : fat) {
-	//         cout << factor << " ";
-	//     }
-	//     cout << endl;
-	// }
+    // armazena todos fatores candidatos para tamanhos da senha
+	for(const vector<int>& fat : fatores) {
+		for(int f : fat) {
+			if(f > 1 && f < 20) {
+				tamanhos_senha.push_back(f);
+			}
+		}
+	}
 
-	return TamanhoSenha(fatores);
+    // armazena os possiveis tamanhos junto com suas ocorrencias
+	for(int x : tamanhos_senha) {
+		lista_candidatos[x]++;
+	}
+
+    return lista_candidatos;
 
 }
 
@@ -374,9 +364,7 @@ int Vigenere::EncontraTamanhoSenha() {
 dado uma chave de tamanho t, faz uma quantidade de tabelas t.
 cada tabela conta a frequência de letras a cada t períodos.
 */
-vector<map<char, float>> Vigenere::ListaDeTabelas(){
-
-	int tamanho = EncontraTamanhoSenha();
+vector<map<char, float>> Vigenere::ListaDeTabelas(int tamanho_senha){
 	vector<map<char, float>> lista_de_tabelas;
 	map<char, int> contagem_de_letras;
 	map<char, float> tabela_de_frequencia; //das letras do ciphertext referente a posição da chave (cada letra da chave gera uma tabela)
@@ -390,14 +378,14 @@ vector<map<char, float>> Vigenere::ListaDeTabelas(){
 	//int total_de_letras = (int)mensagem_filtrada.length(); //tamanho total da mensagem
 	int total;//suponha que a senha seja bad, o total seria o quantas vezes o 'b', o 'a', ou 'd' se repetem
 
-	for(int i = 0; i<tamanho; i++){
+	for(int i = 0; i<tamanho_senha; i++){
 		total = 0;
-		for(int j = i; j < (int) mensagem_filtrada.length(); j+= tamanho)
+		for(int j = i; j < (int) mensagem_filtrada.length(); j+= tamanho_senha)
 			total++;
 		for(int j = 0; j < 26; j++){
 				contagem_de_letras.insert(make_pair(alfabeto[j], 0)); //inicializa com 0 todas as letras para em seguida efetuar a contagem
 		}
-		for(int j = i; j < (int) mensagem_filtrada.length(); j+= tamanho){
+		for(int j = i; j < (int) mensagem_filtrada.length(); j+= tamanho_senha){
 			it = contagem_de_letras.find(mensagem_filtrada[j]);
 			if(it != contagem_de_letras.end())
 				contagem_de_letras.find(mensagem_filtrada[j])->second +=1; //se a letra já estava sendo contada, aumenta 1
@@ -455,11 +443,11 @@ map<char, float> Vigenere::TabelaDeFrequencia(string nome_do_arquivo){
 }
 
 //método que encontra a senha
-void Vigenere::EncontraSenha(int idioma){
+void Vigenere::EncontraSenha(int idioma, int tamanho_senha){
 	
 	string nome_do_arquivo = "";
 	map<char, float> tabela_de_frequencia_do_idioma;
-	vector<map<char, float>> lista_de_tabelas = ListaDeTabelas();
+	vector<map<char, float>> lista_de_tabelas = ListaDeTabelas(tamanho_senha);
 	vector<float> lista1, lista2, lista3, lista4;
 	map<char, float>::iterator it;
 	float auxiliar, auxiliar2;

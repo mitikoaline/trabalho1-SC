@@ -27,15 +27,14 @@ class Vigenere{
 		void setMensagem(string nome_do_arquivo);
 		void setCifrar(bool);
 		// metodos para a parte do ataque
-		int EncontraTamanhoSenha();
+		map<int, int> EncontraTamanhosSenha();
 		vector<pair<string, vector<int>>> PosicoesTrigramas();
 		vector<int> CalculaEspacos(const vector<int>& posicoes);
 		vector<int> ObtemFatores(int num);
-		int TamanhoSenha(const vector<vector<int>>& fatores);
 		// métodos para analisar a frequência das letras
-		vector<map<char, float>> ListaDeTabelas();
+		vector<map<char, float>> ListaDeTabelas(int);
 		map<char, float> TabelaDeFrequencia(string);
-		void EncontraSenha(int);
+		void EncontraSenha(int, int);
 };
 
 class Menu{
