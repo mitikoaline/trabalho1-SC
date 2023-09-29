@@ -9,6 +9,7 @@
 #include <map>
 #include <regex>
 #include <cmath>
+#include <sstream>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ class Vigenere{
 		string mensagem;
 		bool cifrar;
 	public:
+		string getSenha();
 		string Cripto();
 		vector<char> GeraAlfabeto();
 		int BuscaIndice(char letra, vector<char> alfabeto);
@@ -30,6 +32,10 @@ class Vigenere{
 		vector<int> CalculaEspacos(const vector<int>& posicoes);
 		vector<int> ObtemFatores(int num);
 		int TamanhoSenha(const vector<vector<int>>& fatores);
+		// métodos para analisar a frequência das letras
+		vector<map<char, float>> ListaDeTabelas();
+		map<char, float> TabelaDeFrequencia(string);
+		void EncontraSenha(int);
 };
 
 class Menu{
