@@ -375,7 +375,6 @@ vector<map<char, float>> Vigenere::ListaDeTabelas(int tamanho_senha){
 	regex pattern("[^a-z]");
 	string mensagem_filtrada = regex_replace(this->mensagem, pattern, "");//retira todos os caracteres de fora do alfabeto a-z minusculo
 
-	//int total_de_letras = (int)mensagem_filtrada.length(); //tamanho total da mensagem
 	int total;//suponha que a senha seja bad, o total seria o quantas vezes o 'b', o 'a', ou 'd' se repetem
 
 	for(int i = 0; i<tamanho_senha; i++){
@@ -391,8 +390,6 @@ vector<map<char, float>> Vigenere::ListaDeTabelas(int tamanho_senha){
 				contagem_de_letras.find(mensagem_filtrada[j])->second +=1; //se a letra já estava sendo contada, aumenta 1
 		}
 		for(it = contagem_de_letras.begin(); it != contagem_de_letras.end(); it++){
-			//frequencia = (( (float) it->second)/( (float) total_de_letras) ); //calcula a frequencia e faz o casting
-			//cout <<"freq " <<frequencia<<endl;
 			frequencia = (( (float) it->second)/( (float) total) ); //calcula a frequencia e faz o casting
 			tabela_de_frequencia.insert(make_pair(it->first, frequencia));
 		}
@@ -400,14 +397,6 @@ vector<map<char, float>> Vigenere::ListaDeTabelas(int tamanho_senha){
 		contagem_de_letras.clear();
 		tabela_de_frequencia.clear(); // limpa a tabela e a contagem para fazer a proxima rodada
 	}
-
-	/*for(int i = 0; i <tamanho; i++){
-		cout <<"tabela "<< i <<endl;
-		for(map<char,float>::iterator it = lista_de_tabelas[i].begin(); it != lista_de_tabelas[i].end(); it++){
-			cout << it->first <<" "<< it->second<<endl;
-		}
-		cout <<endl;
-	}*/
 
 	return lista_de_tabelas;
 }
@@ -420,7 +409,6 @@ map<char, float> Vigenere::TabelaDeFrequencia(string nome_do_arquivo){
 	string linha;
 	string frequencia;
 	float frequencia2; //ambas as frequencias são o mesmo número, utilizadas para conversão de string para float
-	//stringstream buffer; //variável para converter a string do arquivo em número ponto flutuante
 
 	ifstream arquivo(nome_do_arquivo+".txt");
 
@@ -429,7 +417,6 @@ map<char, float> Vigenere::TabelaDeFrequencia(string nome_do_arquivo){
 		exit(1);
 	}
 
-	//buffer.str(""); //limpa o buffer
 	while(getline(arquivo, linha)){
 		frequencia = linha.substr(3); //pega a substring com a frequencia em porcentagem
 		frequencia2 = stof(frequencia);//converte a string para float
@@ -475,22 +462,17 @@ void Vigenere::EncontraSenha(int idioma, int tamanho_senha){
 		auxiliar2 = 0;
 		for(it = lista_de_tabelas[i].begin(); it != lista_de_tabelas[i].end(); it++){
 			auxiliar = it->second;
-			//cout << "for1 aux: " << auxiliar<<endl;
 			lista1.push_back(auxiliar);//lista1 guarda todas as frequências da i-ésima tabela da lista de tabelas
 		}
 		for(int j = 0; j < (int) lista2.size(); j++){
 			for(int k = 0; k < (int) lista1.size(); k++){
 				auxiliar = lista1[k] * lista2[k];
-				//cout << "for3 aux: " << auxiliar<<endl;
 				lista3.push_back(auxiliar); //faz a listagem do produto de frequências da língua com os caracteres da i-ésima tabela
 			}
 			auxiliar = 0;
 			for(int k = 0; k < (int) lista3.size(); k++){
 				auxiliar = auxiliar + lista3[k];// realiza o somatório dos produtos de frequência
-				//cout << "for4 aux: " << auxiliar<<endl;
 			}
-			//cout << "for2 aux: " << auxiliar<<endl;
-			//cout << "for2 aux2: " << auxiliar2<<endl;
 			if(auxiliar > auxiliar2)
 				auxiliar2 = auxiliar; //salva o maior somatório
 			lista4.push_back(auxiliar);
@@ -499,18 +481,12 @@ void Vigenere::EncontraSenha(int idioma, int tamanho_senha){
 			lista1.push_back(auxiliar);// faz rotacionar a lista1 para que um dos somatórios da lista4 dê  aproximadamente 0.065 (maior valor)
 			lista3.clear();
 		}
-		//cout << "aux2: "<< auxiliar2<<endl;
 		itr = find(lista4.begin(), lista4.end(), auxiliar2);
 		indice_de_k = distance(lista4.begin(), itr); //encontra o indice de uma letra da chave no alfabeto
-		//cout << "k"<< i << ": " << indice_de_k <<endl;
 		auxiliar = 0;
-		//cout << lista1.size() <<endl;
-		//cout << lista4.size() <<endl;
-		//cout << lista3.size() <<endl;
 		lista1.clear();
 		lista4.clear();//limpa tudo para reutilizar na próxima iteração
 		senha.push_back(alfabeto[indice_de_k]);
 	}
-	//cout << lista2.size() <<endl;
 	setSenha(senha);
 }

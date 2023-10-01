@@ -38,16 +38,6 @@ int main(int argc, char *argv[]) {
 			menu.setEncerrar(encerrar);
 		}
 
-    	/*senha do desafio1 = arara
-
-    	string mensagemCifrada = cifragem.Cripto("teste", "Gondim Gondim", true);
-    	string mensagemDecifrada = cifragem.Cripto(senha, mensagem, false);
-
-    	cout << "Mensagem Cifrada:" << endl;
-    	cout << mensagemCifrada << endl;
-    	cout << "---------------------------------------------" << endl;
-    	cout << "Mensagem Decifrada:" << endl;
-    	cout << mensagemDecifrada << endl;*/
 	}
 
     return 0;
